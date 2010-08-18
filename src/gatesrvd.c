@@ -42,6 +42,7 @@
 #include "modules/nem_common.h"
 
 #include "types.h"
+#include "initdata.h"
 
 
 #define DEF_POLLING 1    /* 1 second timeout */
