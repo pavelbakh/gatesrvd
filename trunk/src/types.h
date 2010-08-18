@@ -15,30 +15,30 @@ typedef struct {
 } tag_t;
 
 typedef struct  {
-	BYTE			m_cardtype;					//card type
-	BYTE			m_status;						//card status
-	char			m_cardserial[9];			//card serial
-	char			m_firstname[17];			//first name
-	char			m_lastname[17];			//last name
-	char			m_middlename[17];		//middle name
-	BYTE			m_lessonsnum;				//lessons number
-	BYTE			m_medday;					//check med day
-	BYTE			m_medmonth;				//check med month
-	BYTE			m_medyear;					//check med year
-	DWORD		m_cash;							//cash on card
-	char			m_raspisanie[576];		//lessons stirng MAX_LESSONS * 8
+	int				cardtype;						//card type
+	int				status;							//card status
+	char			cardserial[9];					//card serial
+	char			firstname[17];				//first name
+	char			lastname[17];				//last name
+	char			middlename[17];			//middle name
+	int				lessonsnum;					//lessons number
+	int				medday;							//check med day
+	int				medmonth;					//check med month
+	int				medyear;						//check med year
+	long			cash;								//cash on card
+	char			raspisanie[576];			//lessons stirng MAX_LESSONS * 8
 } card_t;
 
 typedef struct {
-	int 			nReadernum;						// Номер считывателя
-	int 			nReaderType;					// Тип считываетля
-	BOOL		bReadFIO;							// Считывать ФИО
-	BOOL		bRaspisanie;						// Считывать расписание
-	int			nFreeTime;						// Дополнительное время
-	int			nZone;								// Номер зоны
-	BOOL		bMedCheck;						// Проверять меддопуск
-	int			nDelay;								// Задержка повторного прохода
-	BOOL		m_readed;							// Карта считана
+	int 			readernum;						// Номер считывателя
+	int 			readertype;						// Тип считываетля
+	int			readfio;								// Считывать ФИО
+	int			raspisanie;							// Считывать расписание
+	int			freetime;							// Дополнительное время
+	int			zone;									// Номер зоны
+	int			medcCheck;						// Проверять меддопуск
+	int			delay;									// Задержка повторного прохода
+	int			readed;								// Карта считана
 	card_t		card;									// Данные считанной карты
 } reader_t;
 

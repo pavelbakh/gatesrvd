@@ -56,6 +56,8 @@ int daemonize;
 int debug;
 char *cfgfile;
 
+int readers; 			// количество подключенных считывателей
+
 nfcconf_context *ctx;
 const nfcconf_block *root;
 
@@ -64,6 +66,7 @@ typedef struct slot_st slot_t;
 static module_init_fct_t module_init_fct_ptr = NULL;
 static module_event_handler_fct_t module_event_handler_fct_ptr = NULL;
 static nfc_device_desc_t* nfc_device_desc = NULL;
+static reader_t** readers_list = NULL;
 
 static int load_module( void ) {
     nfcconf_block **module_list, *my_module;
