@@ -121,7 +121,17 @@ static int load_module( void ) {
 }
 
 static int execute_event ( const nfc_device_t *nfc_device, const tag_t* tag, const nem_event_t event ) {
-    return (*module_event_handler_fct_ptr)( nfc_device, tag, event );
+//    return (*module_event_handler_fct_ptr)( nfc_device, tag, event );
+	switch(event)
+	{
+		case EVENT_TAG_INSERTED:
+		    INFO( "Card inserted into device: %s", nfc_device->acName);//, nfc_device );
+			break;
+		case EVENT_TAG_REMOVED:
+		    INFO( "Card removed from device: %s", nfc_device->acName);//, nfc_device );
+			break;
+	}
+	return 0;
 }
 
 static int parse_config_file() {
@@ -317,12 +327,19 @@ main ( int argc, char *argv[] ) {
 
 //connect:
     // Try to open the NFC device
-    if ( nfc_device == NULL ) nfc_device = nfc_connect( nfc_device_desc );
+//    if ( nfc_device == NULL ) nfc_device = nfc_connect( nfc_device_desc );
 //init:
-    if ( nfc_device == NULL ) {
-        ERR( "%s", "NFC device not found" );
-        exit(EXIT_FAILURE);
-    }
+//    if ( nfc_device == NULL ) {
+//        ERR( "%s", "NFC device not found" );
+//        exit(EXIT_FAILURE);
+//    }
+    ERR( "%s", "Finding NFC device ..." );
+    do {
+        sleep ( polling_time );
+    	nfc_device = nfc_connect( nfc_device_desc );
+    } while (nfc_device == NULL);
+    ERR( "%s", "NFC device found" );
+
     nfc_initiator_init ( nfc_device );
 
     // Drop the field for a while
@@ -337,7 +354,7 @@ main ( int argc, char *argv[] ) {
     // Enable field so more power consuming cards can power themselves up
     nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, true );
 
-    INFO( "Connected to NFC device: %s", nfc_device->acName, nfc_device );
+    INFO( "Connected to NFC device: %s", nfc_device->acName);//, nfc_device );
 
     do {
 detect:
