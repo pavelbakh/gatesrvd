@@ -7,6 +7,8 @@
 #define KEY_CASH_A _T("cash08")
 #define KEY_CASH_B _T("160208")
 
+#define MAX_READERS							8		// максимальное число подключенных считывателей
+
 #define READER_ENTER						0		// вход
 #define READER_EXIT							1		// выход
 #define READER_PUTCARD					2		// картоприемник
