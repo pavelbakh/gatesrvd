@@ -39,6 +39,8 @@ typedef struct {
 	int			medcCheck;						// Проверять меддопуск
 	int			delay;									// Задержка повторного прохода
 	int			readed;								// Карта считана
+	char		readername[256];			// Имя считывателя
+	char		readerdriver[256];			// Наименование драйвера для считывателя
 	card_t		card;									// Данные считанной карты
 } reader_t;
 

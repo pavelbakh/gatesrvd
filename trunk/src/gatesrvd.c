@@ -56,7 +56,7 @@ int daemonize;
 int debug;
 char *cfgfile;
 
-int readers; 			// количество подключенных считывателей
+int readers = 0; 			// количество подключенных считывателей
 
 nfcconf_context *ctx;
 const nfcconf_block *root;
@@ -66,7 +66,8 @@ typedef struct slot_st slot_t;
 static module_init_fct_t module_init_fct_ptr = NULL;
 static module_event_handler_fct_t module_event_handler_fct_ptr = NULL;
 static nfc_device_desc_t* nfc_device_desc = NULL;
-static reader_t** readers_list = NULL;
+
+static reader_t* readers_list;		// массив с подключенными считывателями
 
 static int load_module( void ) {
     nfcconf_block **module_list, *my_module;
@@ -158,40 +159,45 @@ static int parse_config_file() {
     daemonize = nfcconf_get_bool ( root, "daemon", daemonize );
     polling_time = nfcconf_get_int ( root, "polling_time", polling_time );
     expire_time = nfcconf_get_int ( root, "expire_time", expire_time );
+    readers = nfcconf_get_int ( root, "readers", readers );
 
     if ( debug ) set_debug_level ( 1 );
 
-    DBG( "%s", "Looking for specified NFC device." );
+    DBG( "%s", "Looking for readers." );
     nfcconf_block **device_list, *my_device;
-    const char* nfc_device_str = nfcconf_get_str ( root, "nfc_device", "" );
-    if (strcmp( nfc_device_str, "") != 0) {
-        device_list = nfcconf_find_blocks ( ctx, root, "device", NULL );
+
+    if (readers > 0)
+    {
+        device_list = nfcconf_find_blocks ( ctx, root, "reader", NULL );
         if ( !device_list ) {
-            ERR ( "%s", "Device item not found." );
+            ERR ( "%s", "Reader item not found." );
             return -1;
         }
         int i = 0;
         my_device = device_list[i];
-        while ( my_device != NULL ) {
-            i++;
-            if ( strcmp(my_device->name->data, nfc_device_str) == 0 ) {
-                INFO("Specified device %s have been found.", nfc_device_str);
-                nfc_device_desc = malloc(sizeof(nfc_device_desc_t));
-                nfc_device_desc->pcDriver = (char*)nfcconf_get_str( my_device, "driver", "" );
-		char* device_name = (char*)nfcconf_get_str( my_device, "name", "" );
-		strncpy(nfc_device_desc->acDevice, device_name, sizeof(nfc_device_desc->acDevice));
-                nfc_device_desc->pcPort   = (char*)nfcconf_get_str( my_device, "port", "" );
-                nfc_device_desc->uiSpeed  = nfcconf_get_int( my_device, "speed", 9600 );
-                nfc_device_desc->uiBusIndex  = nfcconf_get_int( my_device, "index", 0 );
-                break;
-            }
-            my_device = device_list[i];
+        while ( my_device != NULL )
+        {
+				char* device_driver = (char*)nfcconf_get_str( my_device, "driver", "" );
+                strcpy(readers_list[i].readerdriver, device_driver);
+                char* device_name = (char*)nfcconf_get_str( my_device, "name", "" );
+                strcpy(readers_list[i].readername, device_name);
+                i++;
+                my_device = device_list[i];
+//                INFO( "Reader #%d name: %s driver: %s size:%d", i, device_name, device_driver, sizeof(device_name));
+//                INFO( "Reader #%d name: %s driver: %s", i, readers_list[i].readername, readers_list[i].readerdriver);
         }
-        DBG( "Found %d device configuration block(s).", i );
-        if ( nfc_device_desc == NULL ) {
-            ERR("NFC device have been specified in configuration file but there is no device description. Unable to select specified device: %s.", nfc_device_str);
-        }
+        INFO( "Found %d readers configuration block(s).", i );
         free ( device_list );
+        if (i  == 0)
+        {
+            ERR("No readres defined in config file");
+            return -1;
+        }
+    }
+    else
+    {
+        ERR("No readres defined in config file");
+        return -1;
     }
 
     return 0;
@@ -297,8 +303,11 @@ ned_get_tag(nfc_device_t* nfc_device, tag_t* tag) {
 
 int
 main ( int argc, char *argv[] ) {
+	tag_t* oldtag_list;
     tag_t* old_tag = NULL;
     tag_t* new_tag;
+
+    readers_list = malloc(MAX_READERS * sizeof(reader_t));
 
     int expire_count = 0;
 
@@ -327,7 +336,9 @@ main ( int argc, char *argv[] ) {
      * so the way we proceed is to look for an tag
      * Any ideas will be welcomed
      */
-    nfc_device_t* nfc_device = NULL;
+    nfc_device_t *device_list, *nfc_device;
+    nfc_device = NULL;
+    device_list = malloc(readers * sizeof(nfc_device_t));
 
 //connect:
     // Try to open the NFC device
@@ -337,63 +348,98 @@ main ( int argc, char *argv[] ) {
 //        ERR( "%s", "NFC device not found" );
 //        exit(EXIT_FAILURE);
 //    }
-    ERR( "%s", "Finding NFC device ..." );
-    do {
-        sleep ( polling_time );
-    	nfc_device = nfc_connect( nfc_device_desc );
-    } while (nfc_device == NULL);
-    ERR( "%s", "NFC device found" );
+    oldtag_list = malloc(readers * sizeof(tag_t));
+    for(int i = 0; i < readers; i++)
+    {
+        INFO( "Reader # %d %s", i, "Finding NFC device ..." );
+        nfc_device_desc = malloc(sizeof(nfc_device_desc_t));
+//        INFO( "Reader name: %s", readers_list[i].readername);
+        strncpy(nfc_device_desc->acDevice, readers_list[i].readername, sizeof(readers_list[i].readername));
+//        INFO( "Reader driver: %s", readers_list[i].readerdriver);
+        nfc_device_desc->pcDriver = readers_list[i].readerdriver;
+//        strcpy(nfc_device_desc->acDevice, "ACS ACR122U 00 00");
+//        nfc_device_desc->pcDriver = "ACR122";
+        nfc_device_desc->pcPort   = "";
+        nfc_device_desc->uiSpeed  = 9600;
+        nfc_device_desc->uiBusIndex  = 0;
+        INFO( "Device name: %s, driver: %s Connecting ...", nfc_device_desc->acDevice, nfc_device_desc->pcDriver);
+        do {
+            sleep ( polling_time );
+        	nfc_device = nfc_connect( nfc_device_desc );
+        } while (nfc_device == NULL);
 
-    nfc_initiator_init ( nfc_device );
+        INFO( "Device name: %s, driver: %s Setting ...", nfc_device_desc->acDevice, nfc_device_desc->pcDriver);
 
-    // Drop the field for a while
-    nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, false );
+        nfc_initiator_init ( nfc_device );
 
-    nfc_configure ( nfc_device, NDO_INFINITE_SELECT, false );
+        // Drop the field for a while
+        nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, false );
 
-    // Configure the CRC and Parity settings
-    nfc_configure ( nfc_device, NDO_HANDLE_CRC, true );
-    nfc_configure ( nfc_device, NDO_HANDLE_PARITY, true );
+        nfc_configure ( nfc_device, NDO_INFINITE_SELECT, false );
 
-    // Enable field so more power consuming cards can power themselves up
-    nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, true );
+        // Configure the CRC and Parity settings
+        nfc_configure ( nfc_device, NDO_HANDLE_CRC, true );
+        nfc_configure ( nfc_device, NDO_HANDLE_PARITY, true );
 
-    INFO( "Connected to NFC device: %s", nfc_device->acName);//, nfc_device );
+        // Enable field so more power consuming cards can power themselves up
+        nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, true );
+
+        device_list[i] = *nfc_device;
+//        oldtag_list[i] = NULL;
+        INFO( "Connected to NFC device: %s", nfc_device->acName);//, nfc_device );
+        nfc_device = NULL;
+        free(nfc_device_desc);
+     }
 
     do {
 detect:
         sleep ( polling_time );
-        new_tag = ned_get_tag(nfc_device, old_tag);
+        for(int i = 0; i < readers; i++)
+        {
+        	*nfc_device = device_list[i];
+        	*old_tag = oldtag_list[i];
 
-        if ( old_tag == new_tag ) { /* state unchanged */
-            /* on card not present, increase and check expire time */
-            if ( expire_time == 0 ) goto detect;
-            if ( new_tag != NULL ) goto detect;
-            expire_count += polling_time;
-            if ( expire_count >= expire_time ) {
-                DBG ( "%s", "Timeout on tag removed " );
-                execute_event ( nfc_device, new_tag,EVENT_EXPIRE_TIME );
-                expire_count = 0; /*restart timer */
-            }
-        } else { /* state changed; parse event */
-            expire_count = 0;
-            if ( new_tag == NULL ) {
-                DBG ( "%s", "Event detected: tag removed" );
-                execute_event ( nfc_device, old_tag, EVENT_TAG_REMOVED );
-                free(old_tag);
-            } else {
-                DBG ( "%s", "Event detected: tag inserted " );
-                execute_event ( nfc_device, new_tag, EVENT_TAG_INSERTED );
-            }
-            old_tag = new_tag;
+        	new_tag = ned_get_tag(nfc_device, old_tag);
+
+			if ( old_tag == new_tag ) { /* state unchanged */
+				/* on card not present, increase and check expire time */
+				if ( expire_time == 0 ) goto detect;
+				if ( new_tag != NULL ) goto detect;
+				expire_count += polling_time;
+				if ( expire_count >= expire_time ) {
+					DBG ( "%s", "Timeout on tag removed " );
+					execute_event ( nfc_device, new_tag,EVENT_EXPIRE_TIME );
+					expire_count = 0; /*restart timer */
+				}
+			} else { /* state changed; parse event */
+				expire_count = 0;
+				if ( new_tag == NULL ) {
+					DBG ( "%s", "Event detected: tag removed" );
+					execute_event ( nfc_device, old_tag, EVENT_TAG_REMOVED );
+//					free(old_tag);
+				} else {
+					DBG ( "%s", "Event detected: tag inserted " );
+					execute_event ( nfc_device, new_tag, EVENT_TAG_INSERTED );
+				}
+				oldtag_list[i] = *new_tag;
+//				old_tag = new_tag;
+			}
         }
     } while ( 1 );
 //disconnect:
-    if ( nfc_device != NULL ) {
-        nfc_disconnect(nfc_device);
-        DBG ( "NFC device (0x%08x) is disconnected", nfc_device );
-        nfc_device = NULL;
+    for(int i = 0; i < readers; i++)
+    {
+//        if ( device_list[i] != NULL ) {
+        	*nfc_device = device_list[i];
+            nfc_disconnect(nfc_device);
+            DBG ( "NFC device (0x%08x) is disconnected", nfc_device );
+//            device_list[i] = NULL;
+//        }
     }
+
+    free ( readers_list );
+    free ( device_list );
+    free(oldtag_list);
 
     /* If we get here means that an error or exit status occurred */
     DBG ( "%s", "Exited from main loop" );
