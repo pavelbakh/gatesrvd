@@ -68,6 +68,8 @@ static module_event_handler_fct_t module_event_handler_fct_ptr = NULL;
 static nfc_device_desc_t* nfc_device_desc = NULL;
 
 static reader_t* readers_list;		// массив с подключенными считывателями
+static nfc_device_t** device_list;	// массив устроуств (считывателей)
+static tag_t** oldtag_list;				// массив для хранения считанных карт
 
 static int load_module( void ) {
     nfcconf_block **module_list, *my_module;
@@ -183,8 +185,6 @@ static int parse_config_file() {
                 strcpy(readers_list[i].readername, device_name);
                 i++;
                 my_device = device_list[i];
-//                INFO( "Reader #%d name: %s driver: %s size:%d", i, device_name, device_driver, sizeof(device_name));
-//                INFO( "Reader #%d name: %s driver: %s", i, readers_list[i].readername, readers_list[i].readerdriver);
         }
         INFO( "Found %d readers configuration block(s).", i );
         free ( device_list );
@@ -303,11 +303,12 @@ ned_get_tag(nfc_device_t* nfc_device, tag_t* tag) {
 
 int
 main ( int argc, char *argv[] ) {
-	tag_t* oldtag_list;
-    tag_t* old_tag = NULL;
+//    tag_t* old_tag = NULL;
     tag_t* new_tag;
 
     readers_list = malloc(MAX_READERS * sizeof(reader_t));
+    device_list = malloc(MAX_READERS * sizeof(nfc_device_t));
+    oldtag_list = malloc(MAX_READERS * sizeof(tag_t));
 
     int expire_count = 0;
 
@@ -325,7 +326,7 @@ main ( int argc, char *argv[] ) {
         }
     }
 
-    load_module();
+//    load_module();
 
     /*
      * Wait endlessly for all events in the list of readers
@@ -336,9 +337,8 @@ main ( int argc, char *argv[] ) {
      * so the way we proceed is to look for an tag
      * Any ideas will be welcomed
      */
-    nfc_device_t *device_list, *nfc_device;
+    nfc_device_t* nfc_device;
     nfc_device = NULL;
-    device_list = malloc(readers * sizeof(nfc_device_t));
 
 //connect:
     // Try to open the NFC device
@@ -348,24 +348,19 @@ main ( int argc, char *argv[] ) {
 //        ERR( "%s", "NFC device not found" );
 //        exit(EXIT_FAILURE);
 //    }
-    oldtag_list = malloc(readers * sizeof(tag_t));
     for(int i = 0; i < readers; i++)
     {
         INFO( "Reader # %d %s", i, "Finding NFC device ..." );
         nfc_device_desc = malloc(sizeof(nfc_device_desc_t));
-//        INFO( "Reader name: %s", readers_list[i].readername);
         strncpy(nfc_device_desc->acDevice, readers_list[i].readername, sizeof(readers_list[i].readername));
-//        INFO( "Reader driver: %s", readers_list[i].readerdriver);
         nfc_device_desc->pcDriver = readers_list[i].readerdriver;
-//        strcpy(nfc_device_desc->acDevice, "ACS ACR122U 00 00");
-//        nfc_device_desc->pcDriver = "ACR122";
         nfc_device_desc->pcPort   = "";
         nfc_device_desc->uiSpeed  = 9600;
         nfc_device_desc->uiBusIndex  = 0;
         INFO( "Device name: %s, driver: %s Connecting ...", nfc_device_desc->acDevice, nfc_device_desc->pcDriver);
         do {
-            sleep ( polling_time );
         	nfc_device = nfc_connect( nfc_device_desc );
+            sleep ( polling_time );
         } while (nfc_device == NULL);
 
         INFO( "Device name: %s, driver: %s Setting ...", nfc_device_desc->acDevice, nfc_device_desc->pcDriver);
@@ -384,8 +379,7 @@ main ( int argc, char *argv[] ) {
         // Enable field so more power consuming cards can power themselves up
         nfc_configure ( nfc_device, NDO_ACTIVATE_FIELD, true );
 
-        device_list[i] = *nfc_device;
-//        oldtag_list[i] = NULL;
+        device_list[i] = nfc_device;
         INFO( "Connected to NFC device: %s", nfc_device->acName);//, nfc_device );
         nfc_device = NULL;
         free(nfc_device_desc);
@@ -396,12 +390,13 @@ detect:
         sleep ( polling_time );
         for(int i = 0; i < readers; i++)
         {
-        	*nfc_device = device_list[i];
-        	*old_tag = oldtag_list[i];
+//        	*nfc_device = device_list[i];
+//        	*old_tag = oldtag_list[i];
+            INFO("Readers: %d", readers);
 
-        	new_tag = ned_get_tag(nfc_device, old_tag);
+            new_tag = ned_get_tag(device_list[i], oldtag_list[i]);
 
-			if ( old_tag == new_tag ) { /* state unchanged */
+			if ( oldtag_list[i] == new_tag ) { /* state unchanged */
 				/* on card not present, increase and check expire time */
 				if ( expire_time == 0 ) goto detect;
 				if ( new_tag != NULL ) goto detect;
@@ -415,13 +410,13 @@ detect:
 				expire_count = 0;
 				if ( new_tag == NULL ) {
 					DBG ( "%s", "Event detected: tag removed" );
-					execute_event ( nfc_device, old_tag, EVENT_TAG_REMOVED );
+					execute_event ( device_list[i], oldtag_list[i], EVENT_TAG_REMOVED );
 //					free(old_tag);
 				} else {
 					DBG ( "%s", "Event detected: tag inserted " );
-					execute_event ( nfc_device, new_tag, EVENT_TAG_INSERTED );
+					execute_event ( device_list[i], new_tag, EVENT_TAG_INSERTED );
 				}
-				oldtag_list[i] = *new_tag;
+				oldtag_list[i] = new_tag;
 //				old_tag = new_tag;
 			}
         }
@@ -430,9 +425,9 @@ detect:
     for(int i = 0; i < readers; i++)
     {
 //        if ( device_list[i] != NULL ) {
-        	*nfc_device = device_list[i];
-            nfc_disconnect(nfc_device);
-            DBG ( "NFC device (0x%08x) is disconnected", nfc_device );
+//        	*nfc_device = device_list[i];
+            nfc_disconnect(device_list[i]);
+            DBG ( "NFC device (0x%08x) is disconnected", device_list[i] );
 //            device_list[i] = NULL;
 //        }
     }
