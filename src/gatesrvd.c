@@ -390,36 +390,32 @@ detect:
         sleep ( polling_time );
         for(int i = 0; i < readers; i++)
         {
-//        	*nfc_device = device_list[i];
-//        	*old_tag = oldtag_list[i];
-            INFO("Readers: %d", readers);
+            INFO("Reader#: %d/%d", i + 1, readers);
 
             new_tag = ned_get_tag(device_list[i], oldtag_list[i]);
-
-			if ( oldtag_list[i] == new_tag ) { /* state unchanged */
-				/* on card not present, increase and check expire time */
+/*
+			if ( oldtag_list[i] == new_tag ) { // state unchanged
+				// on card not present, increase and check expire time
 				if ( expire_time == 0 ) goto detect;
 				if ( new_tag != NULL ) goto detect;
 				expire_count += polling_time;
 				if ( expire_count >= expire_time ) {
 					DBG ( "%s", "Timeout on tag removed " );
 					execute_event ( nfc_device, new_tag,EVENT_EXPIRE_TIME );
-					expire_count = 0; /*restart timer */
+					expire_count = 0; //restart timer
 				}
-			} else { /* state changed; parse event */
+			} else { // state changed; parse event
 				expire_count = 0;
 				if ( new_tag == NULL ) {
 					DBG ( "%s", "Event detected: tag removed" );
 					execute_event ( device_list[i], oldtag_list[i], EVENT_TAG_REMOVED );
-//					free(old_tag);
 				} else {
 					DBG ( "%s", "Event detected: tag inserted " );
 					execute_event ( device_list[i], new_tag, EVENT_TAG_INSERTED );
 				}
 				oldtag_list[i] = new_tag;
-//				old_tag = new_tag;
 			}
-        }
+*/        }
     } while ( 1 );
 //disconnect:
     for(int i = 0; i < readers; i++)
