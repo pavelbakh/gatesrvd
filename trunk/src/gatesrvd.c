@@ -43,6 +43,8 @@
 
 #include "types.h"
 #include "initdata.h"
+#include "loger.h"
+#include "gatectl.h"
 
 
 #define DEF_POLLING 1    /* 1 second timeout */
@@ -55,6 +57,7 @@ int expire_time;
 int daemonize;
 int debug;
 char *cfgfile;
+int gatectl_port;
 
 int readers = 0; 			// количество подключенных считывателей
 
@@ -130,11 +133,28 @@ static int load_module( void ) {
 static int execute_event ( const nfc_device_t *nfc_device, const reader_t *reader,
 												const tag_t* tag, const nem_event_t event ) {
 //    return (*module_event_handler_fct_ptr)( nfc_device, tag, event );
+	int nGatePin = GATE_STOP;
 	switch(event)
 	{
 		case EVENT_TAG_INSERTED:
+		{
+			switch(reader->readertype)
+			{
+				case READER_ENTER:
+					nGatePin = GATE_ENTER;
+//								nGateNum = GATE_DOOR;
+					break;
+				case READER_EXIT:
+					nGatePin = GATE_EXIT;
+					break;
+				case READER_DOOR:
+					nGatePin = GATE_DOOR;
+					break;
+			}
+			open_gate(nGatePin);
 		    INFO( "Card inserted into device #: %d, type: %d", reader->readernum, reader->readertype);//nfc_device->acName);//, nfc_device );
 			break;
+		}
 		case EVENT_TAG_REMOVED:
 		    INFO( "Card removed from device #: %d, type: %d", reader->readernum, reader->readertype);//nfc_device->acName);//, nfc_device );
 			break;
@@ -163,6 +183,7 @@ static int parse_config_file() {
     polling_time = nfcconf_get_int ( root, "polling_time", polling_time );
     expire_time = nfcconf_get_int ( root, "expire_time", expire_time );
     readers = nfcconf_get_int ( root, "readers", readers );
+    gatectl_port = nfcconf_get_int ( root, "gatectlport", GATECTL_COM_PORT );
 
     if ( debug ) set_debug_level ( 1 );
 
@@ -189,11 +210,12 @@ static int parse_config_file() {
                 i++;
                 my_device = device_list[i];
         }
+
         INFO( "Found %d readers configuration block(s).", i );
         free ( device_list );
         if (i  == 0)
         {
-            ERR("No readres defined in config file");
+            ERR("No readers defined in config file");
             return -1;
         }
     }
@@ -313,6 +335,8 @@ main ( int argc, char *argv[] ) {
     device_list = malloc(MAX_READERS * sizeof(nfc_device_t));
     oldtag_list = malloc(MAX_READERS * sizeof(tag_t));
 
+    log_message(LOGFILE, "Start GATE server program");
+
     int expire_count = 0;
 
     INFO ("%s", PACKAGE_STRING);
@@ -329,6 +353,15 @@ main ( int argc, char *argv[] ) {
         }
     }
 
+    // Init gate control devices
+	if(init_gatectl(gatectl_port) != 0)
+	{
+	    log_message(LOGFILE, "Gate controller open port faled");
+		return EXIT_FAILURE;
+	}
+	int nGateNum = GATE_STOP;
+	open_gate(nGateNum);
+
 //    load_module();
 
     /*
@@ -343,8 +376,9 @@ main ( int argc, char *argv[] ) {
     nfc_device_t* nfc_device;
     nfc_device = NULL;
 
+// Основной цикл программы
+
     do {
-detect:
         sleep ( polling_time );
         for(int i = 0; i < readers; i++)
         {
@@ -403,6 +437,8 @@ detect:
             nfc_disconnect(device_list[i]);
             DBG ( "NFC device (0x%08x) is disconnected", device_list[i] );
     }
+
+	close_gatectl();
 
     free ( readers_list );
     free ( device_list );

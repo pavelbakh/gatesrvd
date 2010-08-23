@@ -2,6 +2,13 @@
 #define __INITDATA_H__
 
 
+#define GATECTL_COM_PORT		0		// Номер com порта контроллера шлюза по умолчанию
+
+#define GATE_STOP				13		// Номер порта контроллера close
+#define GATE_ENTER			11		// Номер порта контроллера для входа
+#define GATE_EXIT				12		// Номер порта контроллера для выхода
+#define GATE_DOOR				10		// Номер порта контроллера для двери
+
 #define KEY_OLD_A _T("")
 #define KEY_DATA_A _T("sp0208")
 #define KEY_CASH_A _T("cash08")
@@ -11,9 +18,10 @@
 
 #define READER_ENTER						0		// вход
 #define READER_EXIT							1		// выход
-#define READER_PUTCARD					2		// картоприемник
-#define READER_SERVICE						3		// сервис
-#define READER_NOTYPE						4		//
+#define READER_DOOR						2		// выход
+#define READER_PUTCARD					3		// картоприемник
+#define READER_SERVICE					4		// сервис
+#define READER_NOTYPE						5		//
 
 #define DATASECTORS							15	// Секторов с данными
 
@@ -67,4 +75,5 @@
 #define CARD_ARENDA 						5		// арендатор
 #define CARD_TICKET 							6		// билет
 #define CARD_ALLROAD 						7		// ...
+
 #endif
