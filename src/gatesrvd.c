@@ -43,7 +43,7 @@
 
 #include "types.h"
 #include "initdata.h"
-#include "loger.h"
+//#include "loger.h"
 #include "gatectl.h"
 
 
@@ -138,7 +138,7 @@ static int execute_event ( const nfc_device_t *nfc_device, const reader_t *reade
 	{
 		case EVENT_TAG_INSERTED:
 		{
-			switch(reader->readertype)
+/*			switch(reader->readertype)
 			{
 				case READER_ENTER:
 					nGatePin = GATE_ENTER;
@@ -151,7 +151,7 @@ static int execute_event ( const nfc_device_t *nfc_device, const reader_t *reade
 					nGatePin = GATE_DOOR;
 					break;
 			}
-			open_gate(nGatePin);
+*/			open_gate(GATE_DOOR);
 		    INFO( "Card inserted into device #: %d, type: %d", reader->readernum, reader->readertype);//nfc_device->acName);//, nfc_device );
 			break;
 		}
@@ -335,7 +335,7 @@ main ( int argc, char *argv[] ) {
     device_list = malloc(MAX_READERS * sizeof(nfc_device_t));
     oldtag_list = malloc(MAX_READERS * sizeof(tag_t));
 
-    log_message(LOGFILE, "Start GATE server program");
+//    log_message(LOGFILE, "Start GATE server program");
 
     int expire_count = 0;
 
@@ -356,11 +356,13 @@ main ( int argc, char *argv[] ) {
     // Init gate control devices
 	if(init_gatectl(gatectl_port) != 0)
 	{
-	    log_message(LOGFILE, "Gate controller open port faled");
+//	    log_message(LOGFILE, "Gate controller open port faled");
 		return EXIT_FAILURE;
 	}
 	int nGateNum = GATE_STOP;
 	open_gate(nGateNum);
+
+    INFO ("%s", "Gate controller initialized");
 
 //    load_module();
 

@@ -35,8 +35,7 @@ gatesrvd.o: gatesrvd.c ../config.h /usr/include/nfc/nfc.h \
  /usr/include/sys/ucontext.h /usr/include/bits/sigthread.h \
  /usr/include/dlfcn.h /usr/include/bits/dlfcn.h nfcconf/nfcconf.h \
  debug/debug.h modules/nem_common.h modules/../nfcconf/nfcconf.h \
- modules/../debug/debug.h modules/../types.h types.h initdata.h loger.h \
- gatectl.h
+ modules/../debug/debug.h modules/../types.h types.h initdata.h gatectl.h
 
 ../config.h:
 
@@ -197,7 +196,5 @@ modules/../types.h:
 types.h:
 
 initdata.h:
-
-loger.h:
 
 gatectl.h:
