@@ -15,7 +15,7 @@
 #include <string.h>
 #include <errno.h>
 #include "adrport.h"
-#include "loger.h"
+//#include "loger.h"
 static int fd = 0;
 
 // opens the serial port
@@ -28,7 +28,7 @@ int OpenAdrPort(char* sPortNumber)
     char sPortName[64];
     sprintf(sPortName, "/dev/ttyACM%s", sPortNumber);
     sprintf(sMessage, "sPortName=%s", sPortName);
-	log_message(LOGFILE, sMessage);
+//	log_message(LOGFILE, sMessage);
 
     // make sure port is closed
     CloseAdrPort(fd);
@@ -37,7 +37,7 @@ int OpenAdrPort(char* sPortNumber)
     if (fd < 0)
     {
         sprintf(sMessage, "open error %d %s", errno, strerror(errno));
-		log_message(LOGFILE, sMessage);
+//		log_message(LOGFILE, sMessage);
     }
     else
     {
@@ -65,14 +65,14 @@ int WriteAdrPort(char* psOutput)
 	char sMessage[254];
     if (fd < 1)
     {
-		log_message(LOGFILE, " port is not open");
+//		log_message(LOGFILE, " port is not open");
         return -1;
     } // end if
     iOut = write(fd, psOutput, strlen(psOutput));
     if (iOut < 0)
     {
         sprintf(sMessage, "write error %d %s", errno, strerror(errno));
-		log_message(LOGFILE, sMessage);
+//		log_message(LOGFILE, sMessage);
    }
  //   else
  //   {
@@ -93,7 +93,7 @@ int ReadAdrPort(char* psResponse, int iMax)
 
     if (fd < 1)
     {
-    	log_message(LOGFILE, " port is not open");
+//    	log_message(LOGFILE, " port is not open");
         return -1;
     } // end if
 
@@ -105,7 +105,7 @@ int ReadAdrPort(char* psResponse, int iMax)
 		else
 		{
 		    sprintf(sMessage, "read error %d %s", errno, strerror(errno));
-			log_message(LOGFILE, sMessage);
+//			log_message(LOGFILE, sMessage);
 		} // end if
     }
     else

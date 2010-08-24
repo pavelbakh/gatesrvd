@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "adrport.h"
-#include "loger.h"
+//#include "loger.h"
 
 int init_gatectl(int nCom)
 {
@@ -23,7 +23,7 @@ int init_gatectl(int nCom)
 		sprintf(sCom, "%d", nCom);
 		if (OpenAdrPort(sCom) < 0)
 		{
-			log_message(LOGFILE, "ERROR open com port for control devices");
+//			log_message(LOGFILE, "ERROR open com port for control devices");
 			return -1;
 		}
 		strcpy(sCmd, "$KE,RST");
@@ -33,14 +33,14 @@ int init_gatectl(int nCom)
 		sCmd[iSpot+2] = 0x00; // terminate the string properly
 		if (WriteAdrPort(sCmd) < 0)
 		{
-			log_message(LOGFILE, "ERROR write command to com port");
+//			log_message(LOGFILE, "ERROR write command to com port");
 			return -1;
 		}
 		sleep(1); // give the ADR card some time to respond
 		if (ReadAdrPort(sResult,254) > 0)
 		{
 			sprintf(sMess, "****Response is %s\n", sResult);
-			log_message(LOGFILE, sMess);
+//			log_message(LOGFILE, sMess);
 		} // end if
 
 //		strcpy(sCmd, "$KE,WRA,111111111111111111111111");
@@ -51,7 +51,7 @@ int init_gatectl(int nCom)
 		sCmd[iSpot+2] = 0x00; // terminate the string properly
 		if (WriteAdrPort(sCmd) < 0)
 		{
-			log_message(LOGFILE, "ERROR write command to com port");
+//			log_message(LOGFILE, "ERROR write command to com port");
 			return -1;
 		}
 
@@ -71,7 +71,7 @@ int open_gate(int nGate)
 	sCmd[iSpot+2] = 0x00; // terminate the string properly
 	if (WriteAdrPort(sCmd) < 0)
 	{
-		log_message(LOGFILE, "ERROR write command to com port");
+//		log_message(LOGFILE, "ERROR write command to com port");
 		return -1;
 	}
 
@@ -82,7 +82,7 @@ int open_gate(int nGate)
 	sCmd[iSpot+2] = 0x00; // terminate the string properly
 	if (WriteAdrPort(sCmd) < 0)
 	{
-		log_message(LOGFILE, "ERROR write command to com port");
+//		log_message(LOGFILE, "ERROR write command to com port");
 		return -1;
 	}
 
@@ -95,7 +95,7 @@ int open_gate(int nGate)
 	sCmd[iSpot+2] = 0x00; // terminate the string properly
 	if (WriteAdrPort(sCmd) < 0)
 	{
-		log_message(LOGFILE, "ERROR write command to com port");
+//		log_message(LOGFILE, "ERROR write command to com port");
 		return -1;
 	}
 
@@ -116,7 +116,7 @@ int close_gatectl()
 	sCmd[iSpot+2] = 0x00; // terminate the string properly
 	if (WriteAdrPort(sCmd) < 0)
 	{
-		log_message(LOGFILE, "ERROR write command to com port");
+//		log_message(LOGFILE, "ERROR write command to com port");
 		return -1;
 	}
 	// Close com port

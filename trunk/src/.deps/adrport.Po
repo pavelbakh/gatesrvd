@@ -15,7 +15,7 @@ adrport.o: adrport.c /usr/include/stdio.h /usr/include/features.h \
  /usr/include/endian.h /usr/include/bits/endian.h /usr/include/errno.h \
  /usr/include/bits/errno.h /usr/include/linux/errno.h \
  /usr/include/asm/errno.h /usr/include/asm-generic/errno.h \
- /usr/include/asm-generic/errno-base.h adrport.h loger.h
+ /usr/include/asm-generic/errno-base.h adrport.h
 
 /usr/include/stdio.h:
 
@@ -94,5 +94,3 @@ adrport.o: adrport.c /usr/include/stdio.h /usr/include/features.h \
 /usr/include/asm-generic/errno-base.h:
 
 adrport.h:
-
-loger.h:

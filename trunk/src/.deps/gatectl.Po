@@ -10,7 +10,7 @@ gatectl.o: gatectl.c /usr/include/stdio.h /usr/include/features.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/confname.h \
  /usr/include/string.h /usr/include/bits/string.h \
  /usr/include/bits/string2.h /usr/include/endian.h \
- /usr/include/bits/endian.h adrport.h loger.h
+ /usr/include/bits/endian.h adrport.h
 
 /usr/include/stdio.h:
 
@@ -61,5 +61,3 @@ gatectl.o: gatectl.c /usr/include/stdio.h /usr/include/features.h \
 /usr/include/bits/endian.h:
 
 adrport.h:
-
-loger.h:
