@@ -18,10 +18,9 @@ debug.lo: debug.c ../../config.h debug.h /usr/include/stdio.h \
  /usr/include/bits/syslog-path.h /usr/include/unistd.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/confname.h /usr/include/getopt.h ../types.h \
- /usr/local/include/nfc/nfc.h /usr/include/stdint.h \
- /usr/include/bits/wchar.h \
+ /usr/include/nfc/nfc.h /usr/include/stdint.h /usr/include/bits/wchar.h \
  /usr/lib/gcc/i686-redhat-linux/4.4.4/include/stdbool.h \
- /usr/local/include/nfc/nfc-types.h
+ /usr/include/nfc/nfc-types.h
 
 ../../config.h:
 
@@ -107,7 +106,7 @@ debug.h:
 
 ../types.h:
 
-/usr/local/include/nfc/nfc.h:
+/usr/include/nfc/nfc.h:
 
 /usr/include/stdint.h:
 
@@ -115,4 +114,4 @@ debug.h:
 
 /usr/lib/gcc/i686-redhat-linux/4.4.4/include/stdbool.h:
 
-/usr/local/include/nfc/nfc-types.h:
+/usr/include/nfc/nfc-types.h:
