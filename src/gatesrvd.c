@@ -43,9 +43,6 @@
 
 #include "types.h"
 #include "initdata.h"
-//#include "loger.h"
-#include "gatectl.h"
-
 
 #define DEF_POLLING 1    /* 1 second timeout */
 #define DEF_EXPIRE 0    /* no expire */
@@ -131,9 +128,8 @@ static int load_module( void ) {
 }
 
 static int execute_event ( const nfc_device_t *nfc_device, const reader_t *reader,
-												const tag_t* tag, const nem_event_t event ) {
+												const tag_t* tag, const event_t event ) {
 //    return (*module_event_handler_fct_ptr)( nfc_device, tag, event );
-	int nGatePin = GATE_STOP;
 	switch(event)
 	{
 		case EVENT_TAG_INSERTED:
@@ -151,8 +147,9 @@ static int execute_event ( const nfc_device_t *nfc_device, const reader_t *reade
 					nGatePin = GATE_DOOR;
 					break;
 			}
-*/			open_gate(GATE_DOOR);
-		    INFO( "Card inserted into device #: %d, type: %d", reader->readernum, reader->readertype);//nfc_device->acName);//, nfc_device );
+*/
+//		    INFO( "Card inserted into device #: %d, type: %d", reader->readernum, reader->readertype);//nfc_device->acName);//, nfc_device );
+		    return (*module_event_handler_fct_ptr)( nfc_device, tag, CMD_PASS_SUCCESS );
 			break;
 		}
 		case EVENT_TAG_REMOVED:
@@ -354,17 +351,18 @@ main ( int argc, char *argv[] ) {
     }
 
     // Init gate control devices
-	if(init_gatectl(gatectl_port) != 0)
-	{
+//	if(init_gatectl(gatectl_port) != 0)
+//	{
 //	    log_message(LOGFILE, "Gate controller open port faled");
-		return EXIT_FAILURE;
-	}
-	int nGateNum = GATE_STOP;
-	open_gate(nGateNum);
+//		return EXIT_FAILURE;
+//	}
+//	int nGateNum = GATE_STOP;
+//	open_gate(nGateNum);
 
-    INFO ("%s", "Gate controller initialized");
+//    INFO ("%s", "Gate controller initialized");
 
-//    load_module();
+    load_module();
+    INFO ("%s", "Module loaded");
 
     /*
      * Wait endlessly for all events in the list of readers
@@ -377,6 +375,8 @@ main ( int argc, char *argv[] ) {
      */
     nfc_device_t* nfc_device;
     nfc_device = NULL;
+
+    (*module_event_handler_fct_ptr)( nfc_device, NULL, CMD_INIT_GATE );
 
 // Основной цикл программы
 
@@ -420,6 +420,7 @@ main ( int argc, char *argv[] ) {
 			else // Проверка состояния устройство (карта приложена или снята)
 			{
 	        	INFO("Reader#: %d/%d", i + 1, readers);
+
 	            new_tag = ned_get_tag(device_list[i], oldtag_list[i]);
 	            if(oldtag_list[i] != new_tag)
 	            {
@@ -440,7 +441,7 @@ main ( int argc, char *argv[] ) {
             DBG ( "NFC device (0x%08x) is disconnected", device_list[i] );
     }
 
-	close_gatectl();
+//	close_gatectl();
 
     free ( readers_list );
     free ( device_list );

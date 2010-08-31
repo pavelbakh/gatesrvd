@@ -222,20 +222,20 @@ nem_dbus_init( nfcconf_context *module_context, nfcconf_block* module_block ) {
 }
 
 int
-nem_dbus_event_handler(const nfc_device_t* nfc_device, const tag_t* tag, const nem_event_t event) {
-    switch (event) {
-    case EVENT_TAG_INSERTED:
+nem_dbus_event_handler(const nfc_device_t* nfc_device, const tag_t* tag, const nem_command_t cmd) {
+    switch (cmd) {
+//    case EVENT_TAG_INSERTED:
         // action = "tag_insert";
-        if ( _tag_uid != NULL ) {
-            free(_tag_uid);
-        }
-        tag_get_uid(nfc_device, tag, &_tag_uid);
-        g_signal_emit (nfc_device_object, signals[TAG_INSERTED], 0, _tag_uid);
-        break;
-    case EVENT_TAG_REMOVED:
+//        if ( _tag_uid != NULL ) {
+//            free(_tag_uid);
+//        }
+//        tag_get_uid(nfc_device, tag, &_tag_uid);
+//        g_signal_emit (nfc_device_object, signals[TAG_INSERTED], 0, _tag_uid);
+//        break;
+//    case EVENT_TAG_REMOVED:
         // action = "tag_remove";
-        g_signal_emit (nfc_device_object, signals[TAG_REMOVED], 0, _tag_uid);
-        break;
+//        g_signal_emit (nfc_device_object, signals[TAG_REMOVED], 0, _tag_uid);
+//        break;
     }
     return 0;
 }

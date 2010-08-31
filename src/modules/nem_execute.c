@@ -39,8 +39,10 @@ static int strsubst(char *dest, const char *src, const char *search, const char 
         strncpy(dest, src, before_match);
         src += before_match + strlen(search);
         dest += before_match;
-        strcpy(dest, subst);
-        dest += strlen(subst);
+        if(subst != NULL) {
+        	strcpy(dest, subst);
+        	dest += strlen(subst);
+        }
         strcpy(dest, src);
         dest += strlen(src);
         return 0;
@@ -117,24 +119,30 @@ tag_get_uid(const nfc_device_t* nfc_device, const tag_t* tag, char **dest) {
 }
 
 int
-    nem_execute_event_handler(const nfc_device_t* nfc_device, const tag_t* tag, const nem_event_t event) {
+    nem_execute_event_handler(const nfc_device_t* nfc_device, const tag_t* tag, const nem_command_t cmd) {
     int onerr;
     const char *onerrorstr;
     const nfcconf_list *actionlist;
     nfcconf_block **blocklist, *myblock;
 
+//    INFO( "Card inserted into device");//nfc_device->acName);//, nfc_device );
+//    return 0;
+
     const char* action;
 
-    switch (event) {
-    case EVENT_TAG_INSERTED:
+    switch (cmd) {
+    case CMD_PASS_SUCCESS:
         action = "tag_insert";
         if ( _tag_uid != NULL ) {
             free(_tag_uid);
         }
-        tag_get_uid(nfc_device, tag, &_tag_uid);
+//        tag_get_uid(nfc_device, tag, &_tag_uid);
         break;
-    case EVENT_TAG_REMOVED:
+    case CMD_PASS_DENIED:
         action = "tag_remove";
+        break;
+    case CMD_INIT_GATE:
+        action = "init_ctl";
         break;
     default:
 	return -1;
@@ -169,7 +177,7 @@ int
     }
     // DBG ( "Onerror is set to: '%s'", onerrorstr );
 
-    if ( _tag_uid == NULL ) {
+/*    if ( _tag_uid == NULL  && action != "init_ctl" ) {
         ERR( "%s", "Enable to read tag UID... This should not happend !" );
         switch ( onerr ) {
         case ONERROR_IGNORE:
@@ -182,14 +190,21 @@ int
             DBG ( "%s", "Invalid onerror value" );
             return -1;
         }
-    } else {
+    }
+    else
+*/    {
         while ( actionlist ) {
             int res;
             char *action_cmd_src = actionlist->data;
-            char *action_cmd_dest = malloc((strlen(action_cmd_src) + strlen(_tag_uid))*sizeof(char));
-            strsubst(action_cmd_dest, action_cmd_src, "$TAG_UID", _tag_uid);
+            char *action_cmd_dest = NULL;
 
-            DBG ( "Executing action: '%s'", action_cmd_dest );
+            if(_tag_uid != NULL)
+            	action_cmd_dest = malloc((strlen(action_cmd_src) + strlen(_tag_uid))*sizeof(char));
+            else
+            	action_cmd_dest = malloc(strlen(action_cmd_src));
+           	strsubst(action_cmd_dest, action_cmd_src, "$TAG_UID", _tag_uid);
+
+//            INFO( "Executing action: '%s'", action_cmd_dest );
             /*
             there are some security issues on using system() in
             setuid/setgid programs. so we will use an alternate function

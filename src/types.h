@@ -4,10 +4,17 @@
 #include <nfc/nfc.h>
 
 typedef enum {
-  EVENT_TAG_INSERTED,
-  EVENT_TAG_REMOVED,
-  EVENT_EXPIRE_TIME
-} nem_event_t;
+	EVENT_TAG_INSERTED,
+	EVENT_TAG_REMOVED
+} event_t;
+
+typedef enum {
+  CMD_PASS_SUCCESS,
+  CMD_PASS_DENIED,
+  CMD_PASS_FAIL,
+  CMD_INIT_GATE,
+  CMD_EXIT_GATE
+} nem_command_t;
 
 typedef struct {
   nfc_modulation_t modulation;
