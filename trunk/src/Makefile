@@ -52,8 +52,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_gatesrvd_OBJECTS = adrport.$(OBJEXT) gatectl.$(OBJEXT) \
-	gatesrvd.$(OBJEXT)
+am_gatesrvd_OBJECTS = gatesrvd.$(OBJEXT)
 gatesrvd_OBJECTS = $(am_gatesrvd_OBJECTS)
 gatesrvd_DEPENDENCIES = $(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/nfcconf/libnfcconf.la
@@ -253,11 +252,11 @@ SUBDIRS = debug nfcconf modules
 INCLUDES = $(all_includes)
 AM_CFLAGS = -DNEMDIR=\"${nemdir}\" -DSYSCONFDIR=\"${sysconfdir}\" -pthread -I/usr/include/PCSC  
 AM_LDFLAGS = -lnfc -lusb -lpcsclite  
-gatesrvd_SOURCES = types.h initdata.h adrport.h gatectl.h adrport.c gatectl.c gatesrvd.c
+gatesrvd_SOURCES = types.h initdata.h gatesrvd.c
 gatesrvd_LDADD = $(top_builddir)/src/debug/libdebug.la \
 	$(top_builddir)/src/nfcconf/libnfcconf.la ${top_builddir}/src/nfcconf/libnfcconf.la
 
-noinst_HEADERS = types.h initdata.h gatectl.h adrport.h
+noinst_HEADERS = types.h initdata.h
 all: all-recursive
 
 .SUFFIXES:
@@ -345,8 +344,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-include ./$(DEPDIR)/adrport.Po
-include ./$(DEPDIR)/gatectl.Po
 include ./$(DEPDIR)/gatesrvd.Po
 
 .c.o:
